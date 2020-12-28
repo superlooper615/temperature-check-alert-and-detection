@@ -35,42 +35,33 @@ This strategy relies on the following assumptions:
 * Logs from endpoint detection tooling are reported to the server.
 * Endpoint detection tooling is correctly forwarding logs to SIEM.
 * SIEM is successfully indexing endpoint detection tooling logs. 
-* Attacker toolkits will perform searches to identify if Little Snitch is installed or running.
+* Attacker toolkits will perform temperature check to verify physical host
 
 A blind spot will occur if any of the assumptions are violated. For instance, the following would not trip the alert: 
 * Endpoint detection tooling is tampered with or disabled.
-* The attacker implant does not perform searches for Little Snitch in a manner that generates a child process.
-* Obfuscation occurs in the search for Little Snitch which defeats our regex.
+* The attacker implant does not perform temperature check.
+
 
 # False Positives
 There are several instances where false positives for this ADS could occur:
 
-* Users explicitly performing interrogation of the Little Snitch installation
-  * Grepping for a process, searching for files.
-* Little Snitch performing an update, installation, or uninstallation.
-  * We miss whitelisting a known-good process.
-* Management tools performing actions on Little Snitch.
-  * We miss whitelisting a known-good process.
+* Legitimite applications measuring the hardware temperature.
+* User explitcit check for hardware temperature
 
-Known false positives include:
-* Little Snitch Software Updater
-
-Most false positives can be attributed to scripts or user behavior looking at the current state of Little Snitch. These are either trusted binaries (e.g. our management tools) or are definitively benign user behavior (e.g. the processes performing interrogation are child processes of a user shell process).
+Most false positives can be attributed to scripts or user behavior looking at the current current temperature. These are either trusted binaries (e.g. our management tools) or are definitively benign user behavior (e.g. the processes performing interrogation are child processes of a user shell process).
 
 # Priority
 The priority is set to medium under all conditions.
 
 # Validation
-Validation can occur for this ADS by performing the following execution on a MacOS host: 
+Validation can occur for this ADS by performing the following execution on a Windows OS host: 
 ```
-/bin/sh -c ps -ef | grep Little\\ Snitch | grep -v grep
+wmic /namespace:\\root\WMI path MSAcpi_ThermalZoneTemperature get CurrentTemperature
 ```
 
 # Response
 In the event that this alert fires, the following response procedures are recommended: 
 
-* Look at management tooling to identify if Little Snitch is installed on the host.
-  * If Little Snitch is not installed on the Host, this may be more suspicious.
 * Look at the process that triggered this alert. Walk the process chain.
   * What process triggered this alert?
   * What was the user the process ran as?
@@ -86,8 +77,8 @@ In the event that this alert fires, the following response procedures are recomm
   * Are there other indicators this was manually typed by a user?
   * If the activity may have been user-generated, reach out to the user via our chat client and ask them to clarify their behavior.
 * If the user is unaware of this behavior, escalate to a security incident.
-* If the process behavior seems unusual, or if Little Snitch is not installed, escalate to a security incident. 
+* If the process behavior seems unusual escalate to a security incident. 
 
 # Additional Resources
-* [Elanor Mac Malware (Representative Sample)](https://blog.malwarebytes.com/cybercrime/2016/07/new-mac-backdoor-malware-eleanor/)
+* [GravityRAT Malware (Representative Sample)](https://blog.talosintelligence.com/2018/04/gravityrat-two-year-evolution-of-apt.html)
 
